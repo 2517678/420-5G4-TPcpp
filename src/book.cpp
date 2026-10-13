@@ -1,5 +1,7 @@
 #include "book.h"
 
+#include "library.h"
+
 #include <sstream>
 #include <string>
 #include <vector>
@@ -8,11 +10,11 @@
 Book::Book() :
     title(""), author(""),
     isbn(""), isAvailable(true),
-    borrowerId(nullptr) {}
+    borrowerId("") {}
 Book::Book(const string& title, const string& author, const string& isbn) :
     title(title), author(author),
     isbn(isbn), isAvailable(true),
-    borrowerId(nullptr) {}
+    borrowerId("") {}
 
 
 string Book::getTitle() const {return title;}
@@ -49,11 +51,14 @@ void Book::returnBook() {
 string Book::toString() const {
     return title + " (" + isbn + ")";
 }
+string Book::toString(Library& library) const {
+    return "a";
+}
 string Book::toFileFormat() const {
     // I would have loved std::format, but we are in cpp17, so no std::format for me :(
-    return title + '|' + author + '|' +
-            isbn + '|' + (isAvailable? '1' : '0') +
-            (isAvailable? '|' + borrowerId : "");
+    return title + '|' + author + '|' + isbn +
+            '|' + (isAvailable? '1' : '0') + '|' +
+            (isAvailable? borrowerId : "");
 }
 void Book::fromFileFormat(const string& line) {
     vector<string> parts;
@@ -73,5 +78,7 @@ void Book::fromFileFormat(const string& line) {
     if(!isAvailable) {
         // assert(parts.size() == 5);
         borrowerId = parts[4];
+    } else {
+        borrowerId = "";
     }
 }
