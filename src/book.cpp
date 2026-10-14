@@ -52,13 +52,24 @@ string Book::toString() const {
     return title + " (" + isbn + ")";
 }
 string Book::toString(Library& library) const {
-    return "a";
+    if(isAvailable)
+        return toString();
+    else {
+        User *borrower = library.findUserById(borrowerId);
+
+        return toString() + " - Emprunté par : " + (borrower? borrower->getName() : "InvalidUserId");
+    }
 }
 string Book::toFileFormat() const {
     // I would have loved std::format, but we are in cpp17, so no std::format for me :(
-    return title + '|' + author + '|' + isbn +
-            '|' + (isAvailable? '1' : '0') + '|' +
-            (isAvailable? borrowerId : "");
+    string line = title + '|' + author + '|' + isbn + '|';
+    
+    if(isAvailable)
+        line += "1|";
+    else
+        line += "0|" + borrowerId;
+    
+    return line;
 }
 void Book::fromFileFormat(const string& line) {
     vector<string> parts;
