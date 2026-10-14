@@ -45,6 +45,27 @@ string getInput(const string& prompt) {
     return input;
 }
 
+Library::SortType requestBookSortType() {
+    int choice;
+
+    cout << "\n=== ORDRE DE TRI DES LIVRES ===\n";
+    cout << "1. Par titre\n";
+    cout << "2. Par auteur\n";
+    cout << "Entrez votre choix : ";
+
+    while (!(cin >> choice) || choice < 1 || choice > 2) {
+        cout << "Choix invalide. Entrez 1 ou 2 : ";
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    }
+
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    return (choice == 1)
+        ? Library::SORT_BY_TITLE
+        : Library::SORT_BY_AUTHOR;
+}
+
 void printUsage(const char* programName) {
     cerr << "Usage: " << programName << " [--data-dir|-d <répertoire>]\n";
 }
@@ -133,7 +154,8 @@ int main(int argc, char* argv[]) {
             
             case 3: { // Search by Title
                 string title = getInput("Entrez le titre à rechercher : ");
-                auto results = library.searchBooksByTitle(title);
+                Library::SortType st = requestBookSortType();
+                auto results = library.searchBooksByTitle(title, st);
                 
                 if (results.empty()) {
                     cout << "Aucun livre trouvé avec ce titre.\n";
@@ -151,7 +173,8 @@ int main(int argc, char* argv[]) {
             
             case 4: { // Search by Author
                 string author = getInput("Entrez l'auteur à rechercher : ");
-                auto results = library.searchBooksByAuthor(author);
+                Library::SortType st = requestBookSortType();
+                auto results = library.searchBooksByAuthor(author, st);
                 
                 if (results.empty()) {
                     cout << "Aucun livre trouvé de cet auteur.\n";
@@ -167,16 +190,18 @@ int main(int argc, char* argv[]) {
                 break;
             }
             
-            case 5: // Display All Books
-                library.displayAllBooks();
+            case 5: { // Display All Books
+                Library::SortType st = requestBookSortType();
+                library.displayAllBooks(st);
                 pauseForInput();
                 break;
-            
-            case 6: // Display Available Books
-                library.displayAvailableBooks();
+            }
+            case 6: { // Display Available Books
+                Library::SortType st = requestBookSortType();
+                library.displayAvailableBooks(st);
                 pauseForInput();
                 break;
-            
+            }
             case 7: { // Add User
                 string name = getInput("Entrez le nom de l'utilisateur : ");
                 string userId = getInput("Entrez l'ID de l'utilisateur : ");

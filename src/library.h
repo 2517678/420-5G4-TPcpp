@@ -15,6 +15,11 @@ private:
     vector<unique_ptr<User>> users;
 
 public:
+    enum SortType {
+        SORT_BY_TITLE,
+        SORT_BY_AUTHOR,
+    };
+
     // Constructor and destructor
     Library();
     ~Library() = default;
@@ -23,10 +28,10 @@ public:
     void addBook(const Book& book);
     bool removeBook(const string& isbn);
     Book* findBookByISBN(const string& isbn);
-    vector<Book*> searchBooksByTitle(const string& title);
-    vector<Book*> searchBooksByAuthor(const string& author);
-    vector<Book*> getAvailableBooks();
-    vector<Book*> getAllBooks();
+    vector<Book*> searchBooksByTitle(const string& title, SortType st);
+    vector<Book*> searchBooksByAuthor(const string& author, SortType st);
+    vector<Book*> getAvailableBooks(SortType st);
+    vector<Book*> getAllBooks(SortType st);
     
     // User management
     void addUser(const User& user);
@@ -38,8 +43,8 @@ public:
     bool returnBook(const string& isbn);
     
     // Display methods
-    void displayAllBooks();
-    void displayAvailableBooks();
+    void displayAllBooks(SortType st);
+    void displayAvailableBooks(SortType st);
     void displayAllUsers();
     
     // Statistics

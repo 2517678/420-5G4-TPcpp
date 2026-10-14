@@ -29,7 +29,7 @@ bool FileManager::saveBooksToFile(Library& library) {
         return false;
     }
     
-    auto books = library.getAllBooks();
+    auto books = library.getAllBooks(Library::SORT_BY_TITLE);
     for (Book* book : books) {
         file << book->toFileFormat() << "\n";
     }

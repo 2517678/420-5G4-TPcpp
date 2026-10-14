@@ -1,9 +1,38 @@
 #include <iostream>
 #include <algorithm>
+#include <memory>
 
 #include "library.h"
 
 using namespace std;
+
+
+void sort_books(std::vector<Book*>& list, Library::SortType st) {
+    if (st == Library::SORT_BY_TITLE) {
+        sort(list.begin(), list.end(), [](Book* a, Book* b) {
+            return a->getTitle() < b->getTitle();
+        });
+    } else {
+        sort(list.begin(), list.end(), [](Book* a, Book* b) {
+            return a->getAuthor() < b->getAuthor();
+        });
+    }
+}
+
+void sort_books(std::vector<std::unique_ptr<Book>>& list, Library::SortType st) {
+    // those where painfull to solve
+    // those are the definition of : debugged to correctness and not writen to be correct.
+    if (st == Library::SORT_BY_TITLE) {
+        sort(list.begin(), list.end(), [](const std::unique_ptr<Book>& a, const std::unique_ptr<Book>& b) {
+            return a->getTitle() < b->getTitle();
+        });
+    } else {
+        sort(list.begin(), list.end(), [](const std::unique_ptr<Book>& a, const std::unique_ptr<Book>& b) {
+            return a->getAuthor() < b->getAuthor();
+        });
+    }
+}
+
 
 // Constructor
 Library::Library() {}
@@ -38,7 +67,7 @@ Book* Library::findBookByISBN(const string& isbn) {
 }
 
 // Search books by title (case-insensitive partial match)
-vector<Book*> Library::searchBooksByTitle(const string& title) {
+vector<Book*> Library::searchBooksByTitle(const string& title, SortType st) {
     vector<Book*> results;
     string lowerTitle = title;
     transform(lowerTitle.begin(), lowerTitle.end(), lowerTitle.begin(), ::tolower);
@@ -51,11 +80,13 @@ vector<Book*> Library::searchBooksByTitle(const string& title) {
             results.push_back(book.get());
         }
     }
+
+    sort_books(results, st);
     return results;
 }
 
 // Search books by author (case-insensitive partial match)
-vector<Book*> Library::searchBooksByAuthor(const string& author) {
+vector<Book*> Library::searchBooksByAuthor(const string& author, SortType st) {
     vector<Book*> results;
     string lowerAuthor = author;
     transform(lowerAuthor.begin(), lowerAuthor.end(), lowerAuthor.begin(), ::tolower);
@@ -68,26 +99,32 @@ vector<Book*> Library::searchBooksByAuthor(const string& author) {
             results.push_back(book.get());
         }
     }
+
+    sort_books(results, st);
     return results;
 }
 
 // Get all available books
-vector<Book*> Library::getAvailableBooks() {
+vector<Book*> Library::getAvailableBooks(SortType st) {
     vector<Book*> available;
     for (auto& book : books) {
         if (book->getAvailability()) {
             available.push_back(book.get());
         }
     }
+
+    sort_books(available, st);
     return available;
 }
 
 // Get all books
-vector<Book*> Library::getAllBooks() {
+vector<Book*> Library::getAllBooks(SortType st) {
     vector<Book*> allBooks;
     for (auto& book : books) {
         allBooks.push_back(book.get());
     }
+
+    sort_books(allBooks, st);
     return allBooks;
 }
 
@@ -147,13 +184,14 @@ bool Library::returnBook(const string& isbn) {
 }
 
 // Display all books
-void Library::displayAllBooks() {
+void Library::displayAllBooks(SortType st) {
     if (books.empty()) {
         cout << "Aucun livre dans la bibliothèque.\n";
         return;
     }
     
     cout << "\n=== TOUS LES LIVRES ===\n";
+    sort_books(books, st);
     for (size_t i = 0; i < books.size(); ++i) {
         cout << "\nLivre " << (i + 1) << " :\n";
         cout << books[i]->toString(*this) << "\n";
@@ -162,8 +200,8 @@ void Library::displayAllBooks() {
 }
 
 // Display available books
-void Library::displayAvailableBooks() {
-    auto available = getAvailableBooks();
+void Library::displayAvailableBooks(SortType st) {
+    auto available = getAvailableBooks(st);
     
     if (available.empty()) {
         cout << "Aucun livre disponible pour emprunt.\n";

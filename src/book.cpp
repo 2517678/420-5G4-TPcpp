@@ -49,16 +49,16 @@ void Book::returnBook() {
     setAvailability(true);
 }
 string Book::toString() const {
-    return title + " (" + isbn + ")";
+    return title + " - " + author + " (" + isbn + ")";
 }
 string Book::toString(Library& library) const {
-    if(isAvailable)
+    if (isAvailable)
         return toString();
-    else {
-        User *borrower = library.findUserById(borrowerId);
 
-        return toString() + " - Emprunté par : " + (borrower? borrower->getName() : "InvalidUserId");
-    }
+    User* borrower = library.findUserById(borrowerId);
+
+    return toString() + " - Emprunté par : "
+        + (borrower ? borrower->getName() : "Utilisateur introuvable");
 }
 string Book::toFileFormat() const {
     // I would have loved std::format, but we are in cpp17, so no std::format for me :(
