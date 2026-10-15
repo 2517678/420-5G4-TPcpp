@@ -11,6 +11,12 @@ FileManager::FileManager(const string& booksFile, const string& usersFile)
 
 // Save all library data
 bool FileManager::saveLibraryData(Library& library) {
+    if (booksFileName.empty() || usersFileName.empty()) {
+        cout << "Erreur : sauvegarde annulée, le chemin des fichiers de données est vide.\n";
+        cout << "Lancez le programme avec --data-dir <répertoire>.\n";
+        return false;
+    }
+
     return saveBooksToFile(library) && saveUsersToFile(library);
 }
 
