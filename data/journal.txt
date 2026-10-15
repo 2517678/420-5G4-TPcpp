@@ -1,0 +1,3 @@
+2026-10-15 13:00:54 | BORROW_BOOK | Tartuffe - Molière (9782070380770) - Emprunteur : Valérie Simon
+2026-10-15 13:01:04 | RETURN_BOOK | Tartuffe - Molière (9782070380770) - Emprunteur : Valérie Simon
+2026-10-15 13:01:08 | SAVE | Sauvegarde des donnees effectuee

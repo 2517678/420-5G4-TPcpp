@@ -3,6 +3,8 @@
 #include <string>
 #include <filesystem>
 
+#include "book.h"
+#include "journal.h"
 #include "library.h"
 #include "filemanager.h"
 
@@ -91,6 +93,7 @@ int main(int argc, char* argv[]) {
 
     string booksFile;
     string usersFile;
+    string journalFile;
     if (!dataDir.empty()) {
         if (!filesystem::is_directory(dataDir)) {
             cerr << "Erreur : le répertoire " << dataDir << " n'existe pas.\n";
@@ -99,10 +102,12 @@ int main(int argc, char* argv[]) {
         }
         booksFile = (filesystem::path(dataDir) / "books.txt").string();
         usersFile = (filesystem::path(dataDir) / "users.txt").string();
+        journalFile = (filesystem::path(dataDir) / "journal.txt").string();
     }
 
     Library library;
-    FileManager fileManager(booksFile, usersFile);
+    Journal journal;
+    FileManager fileManager(booksFile, usersFile, journalFile);
     
     // Load existing data
     cout << "Chargement des données de la bibliothèque...\n";
@@ -134,6 +139,8 @@ int main(int argc, char* argv[]) {
                 } else {
                     Book newBook(title, author, isbn);
                     library.addBook(newBook);
+
+                    journal.log_add_book(newBook);
                     cout << "Livre ajouté avec succès !\n";
                 }
                 pauseForInput();
@@ -142,8 +149,14 @@ int main(int argc, char* argv[]) {
             
             case 2: { // Remove Book
                 string isbn = getInput("Entrez l'ISBN du livre à supprimer : ");
+
+                Book* book = library.findBookByISBN(isbn);
                 
-                if (library.removeBook(isbn)) {
+                if (book != nullptr) {
+                    // normally you wouldn't log before removing, but since I am not sure of book's data lifecycle, I prefer to do it like that.
+                    journal.log_delete_book(*book);
+                    library.removeBook(isbn);
+
                     cout << "Livre supprimé avec succès !\n";
                 } else {
                     cout << "Livre non trouvé.\n";
@@ -211,6 +224,7 @@ int main(int argc, char* argv[]) {
                 } else {
                     User newUser(name, userId);
                     library.addUser(newUser);
+                    journal.log_add_user(newUser);
                     cout << "Utilisateur ajouté avec succès !\n";
                 }
                 pauseForInput();
@@ -227,6 +241,8 @@ int main(int argc, char* argv[]) {
                 string userId = getInput("Entrez l'ID de l'utilisateur : ");
                 
                 if (library.checkOutBook(isbn, userId)) {
+                    // no need to validate the pointers, as we know that if checkout worked, isbn and id is valid
+                    journal.log_borrow_book(*library.findBookByISBN(isbn), *library.findUserById(userId));
                     cout << "Livre emprunté avec succès !\n";
                 } else {
                     cout << "Erreur : Impossible d'emprunter le livre. Vérifiez l'ISBN, l'ID utilisateur et la disponibilité du livre.\n";
@@ -237,12 +253,21 @@ int main(int argc, char* argv[]) {
             
             case 10: { // Return Book
                 string isbn = getInput("Entrez l'ISBN du livre à retourner : ");
-                
+
+                Book* book = library.findBookByISBN(isbn);
+                User* user = book ? library.findUserById(book->getBorrowerId()) : nullptr;
+
                 if (library.returnBook(isbn)) {
+                    if (book && user) {
+                        journal.log_return_book(*book, *user);
+                    }
+                
                     cout << "Livre retourné avec succès !\n";
                 } else {
-                    cout << "Erreur : Impossible de retourner le livre. Vérifiez l'ISBN et que le livre est bien emprunté.\n";
+                    cout << "Erreur : Impossible de retourner le livre. "
+                         << "Vérifiez l'ISBN et que le livre est bien emprunté.\n";
                 }
+            
                 pauseForInput();
                 break;
             }
@@ -259,8 +284,10 @@ int main(int argc, char* argv[]) {
             
             case 12: { // Save Data
                 if (fileManager.saveLibraryData(library)) {
+                    journal.log_save();
                     cout << "Données de la bibliothèque sauvegardées avec succès !\n";
                 } else {
+                    journal.log_save_error("unknown");
                     cout << "Erreur lors de la sauvegarde des données de la bibliothèque.\n";
                 }
                 pauseForInput();
@@ -269,6 +296,7 @@ int main(int argc, char* argv[]) {
             
             case 13: { // Create Backup
                 fileManager.createBackup();
+                journal.log_save_backup();
                 pauseForInput();
                 break;
             }
@@ -276,6 +304,8 @@ int main(int argc, char* argv[]) {
             case 0: // Exit
                 cout << "Sauvegarde des données avant la fermeture...\n";
                 fileManager.saveLibraryData(library);
+                journal.log_save();
+                fileManager.saveJournalToFile(journal);
                 cout << "Merci d'avoir utilisé le Système de Gestion de Bibliothèque Personnelle !\n";
                 running = false;
                 break;

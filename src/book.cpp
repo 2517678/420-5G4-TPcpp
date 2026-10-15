@@ -45,7 +45,7 @@ void Book::checkOut(const string& borrowerId) {
     setAvailability(false);
 }
 void Book::returnBook() {
-    setBorrowerId(nullptr);
+    setBorrowerId("");
     setAvailability(true);
 }
 string Book::toString() const {
